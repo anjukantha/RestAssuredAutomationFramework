@@ -1,51 +1,64 @@
 package com.asp.stepDefinitions;
 
+import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import com.asp.pojo.AddPlace;
+import com.asp.pojo.Location;
+
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import io.restassured.RestAssured;
 import io.restassured.response.Response;
-import static org.hamcrest.Matchers.equalTo;
-import static io.restassured.RestAssured.*;
+import io.restassured.specification.RequestSpecification;
 
 public class RSAMap {
-	
-	Response response;
+
+	static Response response;
+	static RequestSpecification rs;
+
 	@Given("Add Place Payload")
 	public void add_place_payload() {
+
+		AddPlace ap = new AddPlace();
+
+		Location location = new Location();
+		location.setLat(-38.383494);
+		location.setLng(33.345678);
+
+		List<String> l = new ArrayList<>();
+		l.add("shoe park");
+		l.add("shop");
+
+		ap.setTypes(l);
+		ap.setAccuracy(50);
+		ap.setAddress("3rd Main, B Channasadra, Bengaluru");
+		ap.setLanguage("English-IN");
+		ap.setLocation(location);
+		ap.setName("Anjan");
+		ap.setPhone_number("+91 8576565357");
+		ap.setWebsite("http://google.com");
+
 		RestAssured.baseURI = "https://rahulshettyacademy.com";
-		
-		given().queryParam("key", "qaclick123").header("Content-Type", "application/json")
-				.body("{\r\n"
-						+ "  \"location\": {\r\n"
-						+ "    \"lat\": -38.383494,\r\n"
-						+ "    \"lng\": 33.427362\r\n"
-						+ "  },\r\n"
-						+ "  \"accuracy\": 50,\r\n"
-						+ "  \"name\": \"Anjan house\",\r\n"
-						+ "  \"phone_number\": \"(+91) 983 893 3937\",\r\n"
-						+ "  \"address\": \"29, side layout, cohen 09\",\r\n"
-						+ "  \"types\": [\r\n"
-						+ "    \"shoe park\",\r\n"
-						+ "    \"shop\"\r\n"
-						+ "  ],\r\n"
-						+ "  \"website\": \"http://google.com\",\r\n"
-						+ "  \"language\": \"French-IN\"\r\n"
-						+ "}");
+		rs = given().log().all().queryParam("key", "qaclick123").header("Content-Type", "application/json").body(ap);
 	}
 
 	@When("user calls AddPlaceAPI with Post http request")
 	public void user_calls_with_post_http_request() {
-		response = when().post("maps/api/place/add/json");
+		response = rs.when().post("maps/api/place/add/json");
 	}
 
 	@Then("the API call is success with status code {int}")
 	public void the_api_call_is_success_with_status_code(Integer int1) {
-		response.then().assertThat().statusCode(int1);
+		response.then().log().all().assertThat().statusCode(int1);
 	}
 
 	@Then("{string} in response body is {string}")
 	public void in_response_body_is_ok(String string1, String string2) {
-		response.then().body("status", equalTo("OK"));
+		response.then().body(string1, equalTo(string2));
 	}
 }
